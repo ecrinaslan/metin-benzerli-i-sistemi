@@ -1,0 +1,1 @@
+print ("Merhaba Yapay Zeka, Intihal tespiti projesi başlıyor!")
