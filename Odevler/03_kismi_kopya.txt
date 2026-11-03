@@ -1,0 +1,14 @@
+Yapay Zekânın Eğitimdeki Rolü
+Öğrenci: Can Arslan
+
+Yapay zekâ, son yıllarda hayatımızın hemen her alanına giren ve hızla gelişen bir teknolojidir. Sağlıktan ulaşıma, bankacılıktan tarıma kadar pek çok sektörde kullanılan bu teknoloji, eğitim alanında da köklü değişikliklerin habercisi olmaktadır. Bu ödevde yapay zekânın eğitimdeki rolünü, sağladığı fırsatları ve beraberinde getirdiği sorunları ele alacağım. Amacım, bu teknolojinin öğrenciler ve öğretmenler için ne anlama geldiğini açık bir şekilde ortaya koymaktır.
+
+Yapay zekânın eğitime en önemli katkısı kişiselleştirilmiş öğrenmedir. Geleneksel sınıflarda öğretmen, otuz kişilik bir gruba aynı hızda ders anlatmak zorunda kalır. Akıllı öğrenme platformları ise her öğrencinin cevaplarını analiz ederek eksik konuları belirler. Sistem, zorlanan öğrenciye ek alıştırmalar sunarken konuyu kavrayan öğrenciyi bir sonraki aşamaya geçirir. Böylece her birey kendi öğrenme hızına uygun bir yol izleyebilir.
+
+Dil öğreniminde kullanılan sohbet robotları da dikkat çekici örneklerdir. İngilizce çalışan bir lise öğrencisi, gece yarısı bile karşısında sabırlı bir konuşma partneri bulabilir. Robot telaffuz hatalarını anında gösterir, yeni kelimeleri cümle içinde tekrar ettirir ve öğrencinin ilgi alanına göre konuşma konuları seçer. Utangaç öğrenciler, sınıf önünde hata yapma kaygısı yaşamadan pratik yapma imkânı bulur.
+
+Oyunlaştırma ile yapay zekânın birleşmesi derslere olan ilgiyi de artırmaktadır. Matematik uygulamaları, çocuğun hangi soru tipinde takıldığını fark edip ona uygun bölümler tasarlar. Puanlar, rozetler ve seviye atlama gibi ögeler öğrencinin motivasyonunu yüksek tutar. Veliler de bu uygulamaların hazırladığı haftalık raporlar sayesinde çocuklarının gelişimini evden izleyebilir.
+
+Ancak bu teknolojinin bazı riskleri de bulunmaktadır. Öğrencilerin ödevlerini yapay zekâ araçlarına yazdırması akademik dürüstlük açısından ciddi bir sorundur. Ayrıca öğrenme platformlarının topladığı kişisel verilerin nasıl saklandığı ve kimlerle paylaşıldığı belirsiz kalabilir. Algoritmaların önyargılı verilerle eğitilmesi de bazı öğrenci gruplarının haksız biçimde değerlendirilmesine yol açabilir. Bu nedenle teknolojinin denetimsiz bırakılmaması gerekir.
+
+Bütün bu gelişmeler, okulların ve üniversitelerin kendilerini yenilemesini zorunlu kılıyor. Öğretim programları, ezber yerine problem çözmeyi ve dijital okuryazarlığı öne çıkaracak biçimde yeniden düzenlenmeli. Ben de bir öğrenci olarak bu araçları kopya çekmek için değil, merak ettiğim konuları daha derinlemesine araştırmak için kullanmanın doğru yol olduğuna inanıyorum.

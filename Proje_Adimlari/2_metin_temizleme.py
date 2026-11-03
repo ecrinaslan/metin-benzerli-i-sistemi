@@ -1,7 +1,7 @@
 import string
 #Dosya okuma 
-dosya1_yolu="odevler/odev1.txt"
-dosya2_yolu="odevler/odev2.txt"
+dosya1_yolu="Odevler/01_orijinal.txt"
+dosya2_yolu="Odevler/03_kismi_kopya.txt"
 
 def metin_oku(dosya_yolu):
     with open(dosya_yolu, "r", encoding="utf-8") as dosya:

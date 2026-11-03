@@ -1,0 +1,14 @@
+Eğitimde Yapay Zekânın Yeri
+Öğrenci: Mehmet Demir
+
+Yapay zekâ, son yıllarda hayatımızın hemen her alanına giren ve hızla gelişen bir teknolojidir. Sağlıktan ulaşıma, bankacılıktan tarıma kadar pek çok sektörde kullanılan bu teknoloji, eğitim alanında da köklü değişikliklerin habercisi olmaktadır. Bu ödevde yapay zekânın eğitimdeki rolünü, sağladığı fırsatları ve beraberinde getirdiği sorunları ele alacağım. Amacım, bu teknolojinin öğrenciler ve öğretmenler için ne anlama geldiğini açık bir şekilde ortaya koymaktır.
+
+Yapay zekânın eğitime en önemli katkısı kişiselleştirilmiş öğrenmedir. Geleneksel sınıflarda öğretmen, otuz kişilik bir gruba aynı hızda ders anlatmak zorunda kalır. Akıllı öğrenme platformları ise her öğrencinin cevaplarını analiz ederek eksik konuları belirler. Sistem, zorlanan öğrenciye ek alıştırmalar sunarken konuyu kavrayan öğrenciyi bir sonraki aşamaya geçirir. Böylece her birey kendi öğrenme hızına uygun bir yol izleyebilir.
+
+Öğretmenlerin iş yükünü azaltmak da yapay zekânın sunduğu önemli avantajlardan biridir. Sınav kâğıtlarının okunması, ödevlerin kontrol edilmesi ve devam çizelgelerinin tutulması gibi rutin işler otomatik sistemlere devredilebilir. Bu sayede öğretmenler, zamanlarının büyük bölümünü öğrencileriyle birebir ilgilenmeye, yaratıcı etkinlikler hazırlamaya ve rehberlik yapmaya ayırabilir. Teknoloji öğretmenin yerini almaz; ona güçlü bir yardımcı olur.
+
+Bunun yanında yapay zekâ, eğitimde fırsat eşitliğine de katkı sağlayabilir. Kırsal bölgelerde yaşayan ya da özel öğrenme ihtiyacı olan öğrenciler, sesli asistanlar ve çeviri araçları sayesinde kaliteli içeriğe daha kolay ulaşabilir. Görme engelli bir öğrenci ders kitaplarını sesli olarak dinleyebilir. Farklı bir dil konuşan bir öğrenci ise dersleri anlık çeviri yardımıyla takip edebilir.
+
+Ancak bu teknolojinin bazı riskleri de bulunmaktadır. Öğrencilerin ödevlerini yapay zekâ araçlarına yazdırması akademik dürüstlük açısından ciddi bir sorundur. Ayrıca öğrenme platformlarının topladığı kişisel verilerin nasıl saklandığı ve kimlerle paylaşıldığı belirsiz kalabilir. Algoritmaların önyargılı verilerle eğitilmesi de bazı öğrenci gruplarının haksız biçimde değerlendirilmesine yol açabilir. Bu nedenle teknolojinin denetimsiz bırakılmaması gerekir.
+
+Sonuç olarak yapay zekâ, doğru kullanıldığında eğitimi daha verimli, kapsayıcı ve kişisel hâle getirebilecek güçlü bir araçtır. Bu gücün faydaya dönüşmesi için okulların açık kurallar belirlemesi, öğretmenlerin bu alanda eğitim alması ve öğrencilerin teknolojiyi eleştirel bir gözle kullanmayı öğrenmesi gerekir. Geleceğin sınıflarında insan ve makine birlikte çalışacak, ancak öğrenmenin merkezinde her zaman insan kalacaktır.

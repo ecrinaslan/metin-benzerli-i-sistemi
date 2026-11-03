@@ -1,8 +1,8 @@
 import os
 
 #Dosyalarımızın bilgisayardaki yollarını tanımlıyoruz.
-dosya1_yolu="odevler/odev1.txt"
-dosya2_yolu="odevler/odev2.txt"
+dosya1_yolu="Odevler/01_orijinal.txt"
+dosya2_yolu="Odevler/03_kismi_kopya.txt"
 
 #Dosyayı okuyup içindeki metni döndüren bir fonksiyon yazıyoruz.
 def metin_oku(dosya_yolu):
