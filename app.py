@@ -1,334 +1,164 @@
-import re
-import string
-from io import BytesIO
-
-import streamlit as st
+import altair as alt
 import pandas as pd
-from pypdf import PdfReader
-from docx import Document
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import streamlit as st
 
-
-# --------------------------------------------------
-# Sayfa ayarları
-# --------------------------------------------------
-
-st.set_page_config(
-    page_title="Metin Benzerliği Tespit Sistemi",
-    page_icon="📄",
-    layout="centered"
+from benzerlik import (
+    KOK_BULMA_KULLANILABILIR,
+    YONTEMLER,
+    benzerlik_matrisi,
+    metin_cikar,
+    metin_on_isle,
+    ortak_kelimeler,
+    ortak_ngramlar,
+    supheli_eslesmeler,
 )
 
-st.title("📄 Metin Benzerliği Tespit Sistemi")
-st.write(
-    "İki ödev dosyasını yükleyerek Jaccard, "
-    "TF-IDF + kosinüs ve Bigram + kosinüs "
-    "benzerliklerini karşılaştırın."
-)
+DOSYA_TURLERI = ["txt", "pdf", "docx"]
+#Isı haritası için tek tonlu mavi skala: açık = düşük benzerlik, koyu = yüksek benzerlik
+ISI_HARITASI_RENKLERI = ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"]
 
 
-# --------------------------------------------------
-# Dosyadan metin çıkarma
-# --------------------------------------------------
-
-def dosyadan_metin_cikar(dosya):
-    uzanti = dosya.name.lower().rsplit(".", 1)[-1]
-
-    if uzanti == "txt":
-        return dosya.getvalue().decode("utf-8-sig")
-
-    elif uzanti == "pdf":
-        okuyucu = PdfReader(BytesIO(dosya.getvalue()))
-        return "\n".join(
-            sayfa.extract_text() or ""
-            for sayfa in okuyucu.pages
-        )
-
-    elif uzanti == "docx":
-        belge = Document(BytesIO(dosya.getvalue()))
-        return "\n".join(
-            paragraf.text
-            for paragraf in belge.paragraphs
-        )
-
-    raise ValueError(
-        "Yalnızca PDF, DOCX veya TXT dosyaları yükleyebilirsiniz."
-    )
+def csv_baytlari(tablo, index=False):
+    #Excel'in Türkçe karakterleri doğru göstermesi için UTF-8 BOM ile kaydediyoruz.
+    return tablo.to_csv(index=index).encode("utf-8-sig")
 
 
-# --------------------------------------------------
-# Metin ön işleme
-# --------------------------------------------------
-
-def metin_temizle(metin):
-    metin = metin.lower()
-
-    for isaret in string.punctuation:
-        metin = metin.replace(isaret, "")
-
-    return re.sub(r"\s+", " ", metin).strip()
-
-
-# --------------------------------------------------
-# Jaccard benzerliği
-# --------------------------------------------------
-
-def jaccard_benzerligi(metin1, metin2):
-    kelimeler1 = set(metin1.split())
-    kelimeler2 = set(metin2.split())
-
-    birlesim = kelimeler1 | kelimeler2
-    ortak = kelimeler1 & kelimeler2
-
-    if not birlesim:
-        return 0.0
-
-    return len(ortak) / len(birlesim) * 100
-
-
-# --------------------------------------------------
-# TF-IDF + kosinüs benzerliği
-# --------------------------------------------------
-
-def tfidf_kosinus_benzerligi(metin1, metin2):
-    vectorizer = TfidfVectorizer()
-    vektorler = vectorizer.fit_transform([metin1, metin2])
-
-    return cosine_similarity(
-        vektorler[0], vektorler[1]
-    )[0][0] * 100
-
-
-# --------------------------------------------------
-# N-gram benzerliği
-# --------------------------------------------------
-
-def ngram_benzerligi(metin1, metin2, n=2):
-    """
-    N-gram özelliklerini çıkarır ve kosinüs benzerliğini hesaplar.
-    n=1: unigram, n=2: bigram, n=3: trigram.
-    """
-
-    vectorizer = CountVectorizer(
-        ngram_range=(n, n),
-        lowercase=True
-    )
-
+def dosya_oku(dosya):
+    #Bozuk/şifreli PDF veya DOCX uygulamayı çökertmesin; hatayı gösterip None döndürüyoruz.
     try:
-        vektorler = vectorizer.fit_transform([metin1, metin2])
-
-        return cosine_similarity(
-            vektorler[0], vektorler[1]
-        )[0][0] * 100
-
-    except ValueError:
-        return 0.0
+        return metin_cikar(dosya.name, dosya.getvalue())
+    except Exception as hata:
+        st.error(f"{dosya.name} işlenemedi: {hata}")
+        return None
 
 
-# --------------------------------------------------
-# Ortak kelimeleri bulma
-# --------------------------------------------------
-
-def ortak_kelimeleri_bul(metin1, metin2):
-    kelimeler1 = set(metin1.split())
-    kelimeler2 = set(metin2.split())
-
-    return sorted(kelimeler1 & kelimeler2)
-
-
-# --------------------------------------------------
-# N-gram dizilerini bulma
-# --------------------------------------------------
-
-def ngramlari_bul(metin, n=2):
-    vectorizer = CountVectorizer(
-        ngram_range=(n, n),
-        lowercase=True
+def isi_haritasi(matris):
+    #Altair alan adlarındaki "." işaretini iç içe alan sandığı için noktasız adlar kullanıyoruz.
+    veri = matris.rename_axis("dosya1").reset_index().melt(id_vars="dosya1", var_name="dosya2", value_name="oran")
+    sira = list(matris.index)
+    temel = alt.Chart(veri).encode(
+        x=alt.X("dosya2:N", sort=sira, title=None, axis=alt.Axis(labelAngle=-40, labelLimit=250)),
+        y=alt.Y("dosya1:N", sort=sira, title=None, axis=alt.Axis(labelLimit=250)),
     )
-
-    try:
-        vectorizer.fit([metin])
-        return set(vectorizer.get_feature_names_out())
-
-    except ValueError:
-        return set()
-
-
-# --------------------------------------------------
-# Ortak N-gram ifadelerini bulma
-# --------------------------------------------------
-
-def ortak_ngramlari_bul(metin1, metin2, n=2):
-    ngramlar1 = ngramlari_bul(metin1, n)
-    ngramlar2 = ngramlari_bul(metin2, n)
-
-    return sorted(ngramlar1 & ngramlar2)
+    hucreler = temel.mark_rect(stroke="white", strokeWidth=2).encode(
+        color=alt.Color("oran:Q", scale=alt.Scale(domain=[0, 100], range=ISI_HARITASI_RENKLERI),
+                        legend=alt.Legend(title="Benzerlik (%)")),
+        tooltip=[alt.Tooltip("dosya1:N", title="1. Dosya"), alt.Tooltip("dosya2:N", title="2. Dosya"),
+                 alt.Tooltip("oran:Q", title="Benzerlik (%)", format=".2f")],
+    )
+    #Koyu hücrelerde beyaz, açık hücrelerde siyah yazı kullanıyoruz.
+    etiketler = temel.mark_text(fontSize=12).encode(
+        text=alt.Text("oran:Q", format=".0f"),
+        color=alt.condition(alt.datum.oran >= 55, alt.value("white"), alt.value("#1f1f1f")),
+    )
+    boyut = max(300, 60 * len(sira))
+    return (hucreler + etiketler).properties(width=boyut, height=boyut)
 
 
-# --------------------------------------------------
-# Dosya yükleme alanları
-# --------------------------------------------------
+#---ARAYÜZ---
+st.set_page_config(page_title="İntihal Tespit Sistemi", layout="wide")
+st.title("İntihal Tespit Sistemi")
 
-dosya1 = st.file_uploader(
-    "1. ödev dosyasını yükleyin",
-    type=["txt", "pdf", "docx"],
-    key="dosya1"
-)
+#Kenar çubuğu: ön işleme ayarları (seçime göre tüm yöntemler yeniden hesaplanır)
+st.sidebar.header("Ön İşleme Ayarları")
+st.sidebar.caption("Temizleme (küçük harf, noktalama ve sayı silme) her zaman yapılır.")
+dolgu_cikar = st.sidebar.checkbox("Dolgu kelimelerini çıkar", help="ve, ile, bu, için gibi yaygın kelimeleri siler.")
+kok_bul = st.sidebar.checkbox("Kelime köklerini kullan", help="Örn: öğrencilerin -> öğrenci")
+if kok_bul and not KOK_BULMA_KULLANILABILIR:
+    st.sidebar.warning("snowballstemmer paketi yüklü değil; kök bulma atlandı. Kurmak için: pip install snowballstemmer")
+    kok_bul = False
 
-dosya2 = st.file_uploader(
-    "2. ödev dosyasını yükleyin",
-    type=["txt", "pdf", "docx"],
-    key="dosya2"
-)
+iki_dosya_sekmesi, coklu_sekme = st.tabs(["İki Dosya", "Çoklu Karşılaştırma"])
 
+#---1. SEKME: İKİ DOSYA---
+with iki_dosya_sekmesi:
+    st.write("İki ödev dosyası yükleyin (TXT, PDF veya DOCX). Sistem metinleri üç farklı yöntemle karşılaştırır.")
 
-# --------------------------------------------------
-# Benzerlik analizi
-# --------------------------------------------------
+    sol, sag = st.columns(2)
+    dosya1 = sol.file_uploader("1. Ödev", type=DOSYA_TURLERI)
+    dosya2 = sag.file_uploader("2. Ödev", type=DOSYA_TURLERI)
 
-if st.button(
-    "Benzerliği Hesapla",
-    type="primary",
-    use_container_width=True
-):
+    ham1 = dosya_oku(dosya1) if dosya1 else None
+    ham2 = dosya_oku(dosya2) if dosya2 else None
+    temiz1 = metin_on_isle(ham1, dolgu_cikar, kok_bul) if ham1 is not None else ""
+    temiz2 = metin_on_isle(ham2, dolgu_cikar, kok_bul) if ham2 is not None else ""
 
-    if dosya1 is None or dosya2 is None:
-        st.warning("Lütfen iki dosyayı da yükleyin.")
-
+    if not (dosya1 and dosya2):
+        st.info("Karşılaştırma için iki dosya yükleyin.")
+    elif ham1 is None or ham2 is None:
+        pass #Okunamayan dosya için hata mesajı dosya_oku içinde gösterildi.
+    elif not temiz1 or not temiz2:
+        st.error("Dosyalardan en az biri boş veya okunabilir metin içermiyor.")
     else:
-        try:
-            # Dosyalardan metin çıkarma
-            ham1 = dosyadan_metin_cikar(dosya1)
-            ham2 = dosyadan_metin_cikar(dosya2)
+        sonuclar = {yontem: hesapla(temiz1, temiz2) for yontem, hesapla in YONTEMLER.items()}
 
-            # Metinleri temizleme
-            temiz1 = metin_temizle(ham1)
-            temiz2 = metin_temizle(ham2)
+        st.subheader("Benzerlik Sonuçları")
+        for sutun, (yontem, oran) in zip(st.columns(3), sonuclar.items()):
+            sutun.metric(yontem, f"%{oran:.2f}")
+        st.caption("Benzerlik yüzdeleri metinlerin içerik benzerliğini gösterir; tek başına intihal kanıtı değildir.")
 
-            if not temiz1 or not temiz2:
-                st.error(
-                    "Dosyalardan en az biri boş veya "
-                    "okunabilir metin içermiyor."
-                )
+        grafik_verisi = pd.DataFrame({"Benzerlik (%)": list(sonuclar.values())}, index=list(sonuclar.keys()))
+        st.bar_chart(grafik_verisi)
 
-            else:
-                # Algoritmaların çalıştırılması
-                jaccard = jaccard_benzerligi(temiz1, temiz2)
-                tfidf = tfidf_kosinus_benzerligi(temiz1, temiz2)
-                bigram = ngram_benzerligi(temiz1, temiz2, n=2)
+        kelimeler = ortak_kelimeler(temiz1, temiz2)
+        bigramlar = ortak_ngramlar(temiz1, temiz2, n=2)
+        sol, sag = st.columns(2)
+        sol.metric("Ortak kelime sayısı", len(kelimeler))
+        sag.metric("Ortak bigram sayısı", len(bigramlar))
+        with st.expander(f"Ortak kelimeler ({len(kelimeler)})"):
+            st.write(", ".join(kelimeler) if kelimeler else "Ortak kelime yok.")
+        with st.expander(f"Ortak bigramlar ({len(bigramlar)})"):
+            st.write(", ".join(bigramlar) if bigramlar else "Ortak bigram yok.")
 
-                # Ortak kelime ve ifadeler
-                ortak_kelimeler = ortak_kelimeleri_bul(
-                    temiz1, temiz2
-                )
+        with st.expander("Çıkarılan metinleri görüntüle"):
+            sol, sag = st.columns(2)
+            sol.text_area(dosya1.name, ham1, height=300)
+            sag.text_area(dosya2.name, ham2, height=300)
 
-                ortak_bigramlar = ortak_ngramlari_bul(
-                    temiz1, temiz2, n=2
-                )
+#---2. SEKME: ÇOKLU KARŞILAŞTIRMA---
+with coklu_sekme:
+    st.write("En az 3 ödev yükleyin. Sistem tüm dosya çiftlerini karşılaştırır ve şüpheli eşleşmeleri listeler.")
 
-                # ------------------------------------------
-                # Sonuç kartları
-                # ------------------------------------------
+    dosyalar = st.file_uploader("Ödevler", type=DOSYA_TURLERI, accept_multiple_files=True)
+    sol, sag = st.columns(2)
+    yontem = sol.selectbox("Yöntem", list(YONTEMLER), index=1)
+    esik = sag.slider("Şüphe eşiği (%)", min_value=0, max_value=100, value=50, step=5)
 
-                st.subheader("Analiz Sonuçları")
+    metinler = {}
+    if len(dosyalar) >= 3:
+        for dosya in dosyalar:
+            ad = dosya.name
+            sayac = 2
+            while ad in metinler: #Aynı adlı iki dosya yüklenirse birbirinin üzerine yazmasın
+                ad = f"{dosya.name} ({sayac})"
+                sayac += 1
+            ham = dosya_oku(dosya)
+            if ham is None:
+                continue
+            metinler[ad] = metin_on_isle(ham, dolgu_cikar, kok_bul)
+            if not metinler[ad]:
+                st.warning(f"{ad} boş veya okunabilir metin içermiyor; benzerlik oranları %0 çıkacaktır.")
 
-                col1, col2, col3 = st.columns(3)
+    if len(dosyalar) < 3:
+        st.info(f"Çoklu karşılaştırma için en az 3 dosya yükleyin (şu an: {len(dosyalar)}).")
+    elif len(metinler) < 3:
+        st.error("Okunabilen dosya sayısı 3'ün altında kaldı.")
+    else:
+        matris = benzerlik_matrisi(metinler, yontem)
+        supheliler = supheli_eslesmeler(matris, esik)
 
-                with col1:
-                    st.metric(
-                        "Jaccard",
-                        f"%{jaccard:.2f}"
-                    )
+        st.subheader(f"Benzerlik Matrisi ({yontem})")
+        st.dataframe(matris.round(2), width="stretch")
+        st.altair_chart(isi_haritasi(matris))
 
-                with col2:
-                    st.metric(
-                        "TF-IDF + Kosinüs",
-                        f"%{tfidf:.2f}"
-                    )
+        st.subheader(f"Şüpheli eşleşmeler (≥ %{esik})")
+        if supheliler.empty:
+            st.success("Eşiği aşan dosya çifti yok.")
+        else:
+            st.dataframe(supheliler, hide_index=True, width="stretch")
 
-                with col3:
-                    st.metric(
-                        "Bigram + Kosinüs",
-                        f"%{bigram:.2f}"
-                    )
-
-                st.caption(
-                    "Benzerlik yüzdeleri metinlerin içerik benzerliğini "
-                    "gösterir; tek başına intihal kanıtı değildir."
-                )
-
-                # ------------------------------------------
-                # Algoritma karşılaştırma grafiği
-                # ------------------------------------------
-
-                st.subheader("Algoritma Karşılaştırması")
-
-                grafik_verisi = pd.DataFrame({
-                    "Algoritma": [
-                        "Jaccard",
-                        "TF-IDF + Kosinüs",
-                        "Bigram + Kosinüs"
-                    ],
-                    "Benzerlik (%)": [
-                        jaccard,
-                        tfidf,
-                        bigram
-                    ]
-                })
-
-                st.bar_chart(
-                    grafik_verisi,
-                    x="Algoritma",
-                    y="Benzerlik (%)",
-                    y_label="Benzerlik (%)"
-                )
-
-                # ------------------------------------------
-                # Ortak kelime ve ifadeler
-                # ------------------------------------------
-
-                st.subheader("Ortak Kelime ve İfadeler")
-
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    st.metric(
-                        "Ortak kelime sayısı",
-                        len(ortak_kelimeler)
-                    )
-
-                    if ortak_kelimeler:
-                        st.write("**Ortak kelimeler:**")
-                        st.write(", ".join(ortak_kelimeler))
-                    else:
-                        st.info("Ortak kelime bulunamadı.")
-
-                with col2:
-                    st.metric(
-                        "Ortak bigram sayısı",
-                        len(ortak_bigramlar)
-                    )
-
-                    if ortak_bigramlar:
-                        st.write("**Ortak ikili ifadeler:**")
-                        st.write(", ".join(ortak_bigramlar))
-                    else:
-                        st.info("Ortak ikili ifade bulunamadı.")
-
-                # ------------------------------------------
-                # Çıkarılan metinler
-                # ------------------------------------------
-
-                with st.expander("Çıkarılan metinleri görüntüle"):
-                    st.write("**1. dosya:**", dosya1.name)
-                    st.text(ham1[:5000])
-
-                    st.write("**2. dosya:**", dosya2.name)
-                    st.text(ham2[:5000])
-
-        except (ValueError, UnicodeDecodeError) as hata:
-            st.error(f"Dosya işlenemedi: {hata}")
-
-        except Exception as hata:
-            st.error(f"Analiz sırasında hata oluştu: {hata}")
+        sol, sag = st.columns(2)
+        sol.download_button("Benzerlik matrisini indir (CSV)", csv_baytlari(matris.round(2), index=True),
+                            file_name="benzerlik_matrisi.csv", mime="text/csv")
+        sag.download_button("Şüpheli eşleşmeleri indir (CSV)", csv_baytlari(supheliler),
+                            file_name="supheli_eslesmeler.csv", mime="text/csv")

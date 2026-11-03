@@ -1,0 +1,14 @@
+Yapay Zekânın Eğitimdeki Rolü
+Öğrenci: Deniz Aydın
+
+Yakın zamanda yaşamımızın neredeyse tüm alanlarına yerleşen ve süratle ilerleyen yapay zekâ, çağımızın en dikkat çekici buluşlarından biridir. Tıptan taşımacılığa, finanstan ziraate dek birçok sektörde yararlanılan bu yenilik, öğretim dünyasında da derin dönüşümlerin işaretini vermektedir. Bu çalışmada söz konusu teknolojinin öğretimdeki işlevini, sunduğu imkânları ve yol açtığı güçlükleri inceleyeceğim. Hedefim, bu yeniliğin talebeler ve eğitmenler açısından neyi ifade ettiğini net biçimde göstermektir.
+
+Yapay zekânın öğretime sağladığı en büyük fayda, bireye özgü öğrenme imkânıdır. Klasik derslik düzeninde eğitmen, kalabalık bir topluluğa tek bir tempoda konu aktarmak mecburiyetindedir. Zeki öğretim sistemleri ise her talebenin yanıtlarını inceleyip yetersiz kaldığı başlıkları tespit eder. Program, güçlük çeken kişiye ilave çalışmalar verirken meseleyi anlamış olanı bir üst basamağa taşır. Bu yolla herkes kendi kavrama temposuna elverişli bir rota takip edebilir.
+
+Eğitmenlerin üzerindeki yükü hafifletmesi de bu teknolojinin getirdiği kayda değer kazançlardan biridir. Yazılı yoklamaların puanlanması, çalışmaların gözden geçirilmesi ve yoklama listelerinin hazırlanması gibi tekdüze görevler makinelere bırakılabilir. Böylelikle eğitmenler vakitlerinin çoğunu talebeleriyle tek tek ilgilenmeye, özgün faaliyetler planlamaya ve yönlendirme yapmaya harcayabilir. Makine eğitmenin makamını devralmaz; aksine ona kuvvetli bir destek sunar.
+
+Buna ek olarak bu teknoloji, öğretimde eşit imkânlar yaratılmasına da yardımcı olabilir. Köylerde oturan veya farklı öğrenme gereksinimleri bulunan talebeler, konuşan yardımcı yazılımlar ile tercüme programları aracılığıyla nitelikli kaynaklara rahatça erişebilir. Gözleri görmeyen bir genç, ders materyallerini işiterek öğrenebilir. Başka bir lisan kullanan bir talebe de anlatılanları eş zamanlı tercümeyle izleyebilir.
+
+Öte yandan bu yeniliğin birtakım tehlikeleri de mevcuttur. Talebelerin çalışmalarını yapay zekâ programlarına hazırlatması bilimsel ahlak bakımından büyük bir problemdir. Bunun dışında öğretim sistemlerinin biriktirdiği özel bilgilerin nerede tutulduğu ve kimlere aktarıldığı meçhul kalabilir. Yazılımların taraflı bilgilerle geliştirilmesi de belirli talebe topluluklarının adaletsiz şekilde ölçülmesine neden olabilir. Bu sebeple söz konusu araçların kontrolsüz kalmasına izin verilmemelidir.
+
+Özetle yapay zekâ, yerinde kullanıldığında öğretimi daha etkili, herkesi kucaklayan ve bireysel bir yapıya kavuşturabilecek kuvvetli bir gereçtir. Bu kudretin yarara dönüşebilmesi için eğitim kurumlarının şeffaf ilkeler koyması, eğitmenlerin bu konuda kendilerini yetiştirmesi ve talebelerin yeniliği sorgulayıcı bir bakışla değerlendirmeyi kavraması şarttır. Yarının dersliklerinde insanla makine omuz omuza çalışacak, fakat öğrenme sürecinin odağında daima insan bulunacaktır.

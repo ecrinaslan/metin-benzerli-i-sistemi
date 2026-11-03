@@ -1,0 +1,14 @@
+Yapay Zekâ ve Eğitimin Geleceği
+Öğrenci: Selin Koç
+
+Geçen dönem matematik dersinde öğretmenimiz bize, soruları çözerken ipucu veren bir uygulama tanıttı. İlk başta bunun sıradan bir test programı olduğunu düşündüm. Ancak birkaç hafta sonra uygulamanın benim hangi konularda hata yaptığımı benden daha iyi bildiğini fark ettim. Bu deneyim, yapay zekâ destekli araçların öğrenme sürecini nasıl dönüştürdüğünü merak etmeme yol açtı ve bu ödevin konusunu belirledi.
+
+Bugün eğitimde kullanılan yapay zekâ uygulamaları üç ana grupta toplanabilir. Birinci grupta öğrencinin seviyesini ölçüp ona uygun sorular seçen uyarlanabilir test sistemleri bulunur. İkinci grup, yazılı metinleri değerlendiren ve dil bilgisi hatalarını işaretleyen yazma asistanlarıdır. Üçüncü grup ise öğrencilerin istedikleri zaman soru sorabildiği sanal öğretmenler ve sohbet tabanlı yardımcılardır.
+
+Bu araçların en güzel tarafı, öğrencinin kendi temposunda ilerlemesine izin vermeleridir. Sınıfta soru sormaya çekinen biri, ekran başında aynı konuyu defalarca tekrar edebilir. Öğretmenler ise sistemin oluşturduğu raporlara bakarak sınıfın genel durumunu bir bakışta görebilir ve ders planını buna göre değiştirebilir. Bu, özellikle kalabalık okullarda büyük bir kolaylık sağlar.
+
+Yine de bu tabloyu fazla iyimser çizmemek gerekir. Her öğrencinin evinde bilgisayar ya da hızlı internet bulunmuyor. Teknolojiye erişimi olmayan öğrenciler, akranlarının gerisinde kalma tehlikesiyle karşı karşıya. Bunun yanı sıra hazır cevaplara alışan gençlerin düşünme ve araştırma becerileri zayıflayabilir. Bir metni makineye özetletmek kolaydır, ama o metni gerçekten anlamak emek ister.
+
+Bir diğer tartışma konusu da öğretmenlik mesleğinin geleceğidir. Bazı uzmanlar, ileride derslerin tamamen makineler tarafından verileceğini öne sürüyor. Bence bu görüş, öğretmenin yalnızca bilgi aktaran biri olmadığını göz ardı ediyor. İyi bir öğretmen öğrencisine örnek olur, onu cesaretlendirir ve zor zamanlarında yanında durur. Bu insani bağı bir yazılımın kurması mümkün görünmüyor.
+
+Kısacası yapay zekâ, eğitimin yerini alacak bir sihirli değnek değil, dikkatli kullanılması gereken bir alettir. Okulların bu araçları seçerken öğrenci gizliliğini koruması, öğretmenlere hazırlık süresi tanıması ve eşit erişimi gözetmesi gerekir. Ben de artık uygulamanın verdiği ipuçlarını kullanırken önce kendi çözümümü denemeye özen gösteriyorum.

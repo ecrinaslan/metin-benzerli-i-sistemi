@@ -1,0 +1,14 @@
+YAPAY ZEKÂNIN EĞİTİMDEKİ ROLÜ
+ÖĞRENCİ: AYŞE ÇELİK
+
+Yapay zekâ, son YILLARDA HAYATIMIZIN hemen her ALANINA GİREN ve HIZLA GELİŞEN BİR teknolojidir. SAĞLIKTAN ULAŞIMA, BANKACILIKTAN TARIMA kadar pek ÇOK SEKTÖRDE KULLANILAN bu TEKNOLOJİ, EĞİTİM ALANINDA da KÖKLÜ DEĞİŞİKLİKLERİN HABERCİSİ OLMAKTADIR. Bu ÖDEVDE yapay ZEKÂNIN EĞİTİMDEKİ ROLÜNÜ, SAĞLADIĞI FIRSATLARI ve beraberinde GETİRDİĞİ SORUNLARI ele ALACAĞIM. AMACIM, bu TEKNOLOJİNİN ÖĞRENCİLER ve ÖĞRETMENLER İÇİN ne anlama GELDİĞİNİ AÇIK bir ŞEKİLDE ortaya KOYMAKTIR.
+
+Yapay ZEKÂNIN EĞİTİME en ÖNEMLİ KATKISI KİŞİSELLEŞTİRİLMİŞ ÖĞRENMEDİR. Geleneksel SINIFLARDA ÖĞRETMEN, otuz KİŞİLİK bir gruba AYNI HIZDA ders anlatmak zorunda KALIR. AKILLI ÖĞRENME PLATFORMLARI İSE her ÖĞRENCİNİN CEVAPLARINI ANALİZ ederek EKSİK KONULARI BELİRLER. Sistem, zorlanan ÖĞRENCİYE ek ALIŞTIRMALAR sunarken konuyu kavrayan ÖĞRENCİYİ BİR sonraki AŞAMAYA GEÇİRİR. BÖYLECE her BİREY kendi ÖĞRENME HIZINA uygun bir yol izleyebilir.
+
+ÖĞRETMENLERİN İŞ YÜKÜNÜ azaltmak da yapay ZEKÂNIN SUNDUĞU ÖNEMLİ avantajlardan BİRİDİR. SINAV KÂĞITLARININ OKUNMASI, ÖDEVLERİN kontrol EDİLMESİ ve devam ÇİZELGELERİNİN TUTULMASI gibi RUTİN İŞLER OTOMATİK sistemlere DEVREDİLEBİLİR. Bu sayede ÖĞRETMENLER, ZAMANLARININ BÜYÜK BÖLÜMÜNÜ ÖĞRENCİLERİYLE BİREBİR ilgilenmeye, YARATICI etkinlikler HAZIRLAMAYA ve REHBERLİK yapmaya AYIRABİLİR. Teknoloji ÖĞRETMENİN yerini almaz; ona GÜÇLÜ bir YARDIMCI olur.
+
+Bunun YANINDA yapay zekâ, EĞİTİMDE FIRSAT EŞİTLİĞİNE de KATKI SAĞLAYABİLİR. KIRSAL BÖLGELERDE YAŞAYAN ya da ÖZEL ÖĞRENME İHTİYACI olan ÖĞRENCİLER, SESLİ asistanlar ve ÇEVİRİ ARAÇLARI sayesinde KALİTELİ İÇERİĞE daha kolay ULAŞABİLİR. GÖRME ENGELLİ bir ÖĞRENCİ ders KİTAPLARINI sesli olarak dinleyebilir. FARKLI bir DİL KONUŞAN BİR ÖĞRENCİ İSE dersleri ANLIK ÇEVİRİ YARDIMIYLA takip EDEBİLİR.
+
+Ancak bu TEKNOLOJİNİN BAZI RİSKLERİ de BULUNMAKTADIR. ÖĞRENCİLERİN ÖDEVLERİNİ yapay zekâ ARAÇLARINA YAZDIRMASI akademik DÜRÜSTLÜK AÇISINDAN CİDDİ bir sorundur. AYRICA ÖĞRENME PLATFORMLARININ TOPLADIĞI KİŞİSEL VERİLERİN NASIL SAKLANDIĞI ve KİMLERLE PAYLAŞILDIĞI BELİRSİZ kalabilir. ALGORİTMALARIN ÖNYARGILI VERİLERLE EĞİTİLMESİ de BAZI ÖĞRENCİ GRUPLARININ HAKSIZ BİÇİMDE DEĞERLENDİRİLMESİNE yol AÇABİLİR. Bu nedenle teknolojinin DENETİMSİZ BIRAKILMAMASI GEREKİR.
+
+SONUÇ olarak yapay zekâ, DOĞRU KULLANILDIĞINDA EĞİTİMİ daha VERİMLİ, KAPSAYICI ve KİŞİSEL hâle getirebilecek GÜÇLÜ bir ARAÇTIR. Bu GÜCÜN faydaya DÖNÜŞMESİ İÇİN OKULLARIN AÇIK kurallar belirlemesi, ÖĞRETMENLERİN bu alanda EĞİTİM ALMASI ve ÖĞRENCİLERİN teknolojiyi ELEŞTİREL bir GÖZLE KULLANMAYI ÖĞRENMESİ gerekir. GELECEĞİN SINIFLARINDA İNSAN ve MAKİNE birlikte ÇALIŞACAK, ancak ÖĞRENMENİN merkezinde her zaman İNSAN KALACAKTIR.
