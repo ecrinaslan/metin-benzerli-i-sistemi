@@ -1,6 +1,13 @@
 import altair as alt
 import pandas as pd
 import streamlit as st
+from arsiv import (
+    arsiv_tablosunu_hazirla,
+    arsive_ekle,
+    arsiv_listesi,
+    arsiv_metinlerini_getir,
+    arsivden_sil,
+)
 
 from benzerlik import (
     KOK_BULMA_KULLANILABILIR,
@@ -57,6 +64,7 @@ def isi_haritasi(matris):
 
 #---ARAYÜZ---
 st.set_page_config(page_title="İntihal Tespit Sistemi", layout="wide")
+arsiv_tablosunu_hazirla()
 st.title("İntihal Tespit Sistemi")
 
 #Kenar çubuğu: ön işleme ayarları (seçime göre tüm yöntemler yeniden hesaplanır)
@@ -68,7 +76,9 @@ if kok_bul and not KOK_BULMA_KULLANILABILIR:
     st.sidebar.warning("snowballstemmer paketi yüklü değil; kök bulma atlandı. Kurmak için: pip install snowballstemmer")
     kok_bul = False
 
-iki_dosya_sekmesi, coklu_sekme = st.tabs(["İki Dosya", "Çoklu Karşılaştırma"])
+iki_dosya_sekmesi, coklu_sekme, arsiv_sekmesi = st.tabs(
+    ["İki Dosya", "Çoklu Karşılaştırma", "Ödev Arşivi"]
+)
 
 #---1. SEKME: İKİ DOSYA---
 with iki_dosya_sekmesi:
@@ -162,3 +172,154 @@ with coklu_sekme:
                             file_name="benzerlik_matrisi.csv", mime="text/csv")
         sag.download_button("Şüpheli eşleşmeleri indir (CSV)", csv_baytlari(supheliler),
                             file_name="supheli_eslesmeler.csv", mime="text/csv")
+
+# --- 3. SEKME: ÖDEV ARŞİVİ ---
+with arsiv_sekmesi:
+    st.subheader("Ödev Arşivi")
+    st.write(
+        "Yeni bir ödev yükleyerek arşive kaydedebilir ve "
+        "arşivden seçtiğiniz ödevlerle karşılaştırabilirsiniz."
+    )
+
+    yeni_dosya = st.file_uploader(
+        "Arşive eklenecek ödevi seçin",
+        type=DOSYA_TURLERI,
+        key="arsiv_dosyasi"
+    )
+
+    # Arşivdeki mevcut ödevleri listele
+    arsiv_kayitlari = arsiv_listesi()
+
+    # Karşılaştırılacak ödevleri kullanıcı seçsin
+    secenekler = {
+        f'{kayit["dosya_adi"]} (ID: {kayit["id"]})': kayit["id"]
+        for kayit in arsiv_kayitlari
+    }
+
+    secilen_etiketler = st.multiselect(
+        "Karşılaştırılacak arşiv ödevlerini seçin",
+        options=list(secenekler.keys()),
+        help="Yalnızca seçtiğiniz ödevlerle karşılaştırma yapılacaktır.",
+        key="arsiv_karsilastirma_secimi"
+    )
+
+    secilen_idler = [
+        secenekler[etiket] for etiket in secilen_etiketler
+    ]
+
+    arsiv_yontemi = st.selectbox(
+        "Karşılaştırma yöntemi",
+        list(YONTEMLER.keys()),
+        key="arsiv_yontemi"
+    )
+
+    if st.button("Arşive Ekle ve Karşılaştır", type="primary"):
+        if yeni_dosya is None:
+            st.warning("Lütfen bir ödev dosyası seçin.")
+        else:
+            ham_metin = dosya_oku(yeni_dosya)
+
+            if ham_metin is not None:
+                temiz_metin = metin_on_isle(
+                    ham_metin, dolgu_cikar, kok_bul
+                )
+
+                if not temiz_metin:
+                    st.error("Dosyada analiz edilebilir metin bulunamadı.")
+                else:
+                    kayit_id, yeni_eklendi = arsive_ekle(
+                        yeni_dosya.name,
+                        ham_metin,
+                        yeni_dosya.getvalue()
+                    )
+
+                    if yeni_eklendi:
+                        st.success("Ödev arşive kaydedildi.")
+                    else:
+                        st.info(
+                            "Bu dosya daha önce arşive eklenmiş. "
+                            "Mevcut kayıt üzerinden işlem yapılıyor."
+                        )
+
+                    if not secilen_idler:
+                        st.info(
+                            "Karşılaştırma yapmak için arşivden ödev seçin. "
+                            "Dosya arşive kaydedildi."
+                        )
+                    else:
+                        eski_odevler = arsiv_metinlerini_getir(
+                            kayit_idleri=secilen_idler,
+                            haric_id=kayit_id
+                        )
+
+                        if not eski_odevler:
+                            st.info(
+                                "Seçtiğiniz ödevler arasında "
+                                "karşılaştırılabilecek başka kayıt bulunamadı."
+                            )
+                        else:
+                            hesapla = YONTEMLER[arsiv_yontemi]
+                            sonuclar = []
+
+                            for odev in eski_odevler:
+                                eski_temiz = metin_on_isle(
+                                    odev["metin"], dolgu_cikar, kok_bul
+                                )
+
+                                oran = hesapla(temiz_metin, eski_temiz)
+
+                                sonuclar.append({
+                                    "Arşivdeki Ödev": odev["dosya_adi"],
+                                    "Benzerlik (%)": round(float(oran), 2)
+                                })
+
+                            sonuc_tablosu = pd.DataFrame(sonuclar)
+                            sonuc_tablosu = sonuc_tablosu.sort_values(
+                                "Benzerlik (%)",
+                                ascending=False
+                            ).reset_index(drop=True)
+
+                            st.subheader("Arşiv Karşılaştırma Sonuçları")
+                            st.dataframe(
+                                sonuc_tablosu,
+                                hide_index=True,
+                                width="stretch"
+                            )
+
+                            st.bar_chart(
+                                sonuc_tablosu.set_index("Arşivdeki Ödev")
+                            )
+
+    st.divider()
+
+    st.subheader("Arşivlenen Ödevler")
+
+    kayitlar = arsiv_listesi()
+
+    if kayitlar:
+        st.metric("Arşivdeki toplam ödev", len(kayitlar))
+
+        st.dataframe(
+            pd.DataFrame(kayitlar),
+            hide_index=True,
+            width="stretch"
+        )
+
+        silme_secenekleri = {
+            f'{kayit["id"]} - {kayit["dosya_adi"]}': kayit["id"]
+            for kayit in kayitlar
+        }
+
+        secilen = st.selectbox(
+            "Silinecek ödevi seçin",
+            list(silme_secenekleri.keys()),
+            key="silinecek_arsiv_odevi"
+        )
+
+        if st.button("Seçilen Ödevi Arşivden Sil"):
+            arsivden_sil(silme_secenekleri[secilen])
+            st.success("Ödev arşivden silindi.")
+            st.rerun()
+
+    else:
+        st.info("Arşivde henüz kayıtlı ödev bulunmuyor.")
