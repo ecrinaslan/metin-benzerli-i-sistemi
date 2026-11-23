@@ -481,11 +481,11 @@ YONTEMLER = {
 }
 
 
+
 def benzerlik_matrisi(
     metinler,
     yontem="TF-IDF + Kosinüs"
 ):
-
     hesapla = YONTEMLER[yontem]
 
     adlar = list(metinler)
@@ -497,18 +497,17 @@ def benzerlik_matrisi(
     )
 
     for i, ad1 in enumerate(adlar):
-
         for ad2 in adlar[i + 1:]:
-
-            matris.loc[ad1, ad2] = (
-                matris.loc[ad2, ad1]
-                = hesapla(
-                    metinler[ad1],
-                    metinler[ad2]
-                )
+            benzerlik = hesapla(
+                metinler[ad1],
+                metinler[ad2]
             )
 
+            matris.loc[ad1, ad2] = benzerlik
+            matris.loc[ad2, ad1] = benzerlik
+
     return matris
+
 
 
 def supheli_eslesmeler(
