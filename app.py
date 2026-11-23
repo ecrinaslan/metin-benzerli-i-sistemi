@@ -1,6 +1,8 @@
+
 import altair as alt
 import pandas as pd
 import streamlit as st
+
 from arsiv import (
     arsiv_tablosunu_hazirla,
     arsive_ekle,
@@ -18,20 +20,21 @@ from benzerlik import (
     ortak_kelimeler,
     ortak_ngramlar,
     supheli_eslesmeler,
+    bolumlere_ayir,
 )
 
 DOSYA_TURLERI = ["txt", "pdf", "docx"]
-#Isı haritası için tek tonlu mavi skala: açık = düşük benzerlik, koyu = yüksek benzerlik
-ISI_HARITASI_RENKLERI = ["#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"]
+
+ISI_HARITASI_RENKLERI = [
+    "#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"
+]
 
 
 def csv_baytlari(tablo, index=False):
-    #Excel'in Türkçe karakterleri doğru göstermesi için UTF-8 BOM ile kaydediyoruz.
     return tablo.to_csv(index=index).encode("utf-8-sig")
 
 
 def dosya_oku(dosya):
-    #Bozuk/şifreli PDF veya DOCX uygulamayı çökertmesin; hatayı gösterip None döndürüyoruz.
     try:
         return metin_cikar(dosya.name, dosya.getvalue())
     except Exception as hata:
@@ -40,142 +43,475 @@ def dosya_oku(dosya):
 
 
 def isi_haritasi(matris):
-    #Altair alan adlarındaki "." işaretini iç içe alan sandığı için noktasız adlar kullanıyoruz.
-    veri = matris.rename_axis("dosya1").reset_index().melt(id_vars="dosya1", var_name="dosya2", value_name="oran")
+    veri = (
+        matris.rename_axis("dosya1")
+        .reset_index()
+        .melt(
+            id_vars="dosya1",
+            var_name="dosya2",
+            value_name="oran"
+        )
+    )
+
     sira = list(matris.index)
+
     temel = alt.Chart(veri).encode(
-        x=alt.X("dosya2:N", sort=sira, title=None, axis=alt.Axis(labelAngle=-40, labelLimit=250)),
-        y=alt.Y("dosya1:N", sort=sira, title=None, axis=alt.Axis(labelLimit=250)),
+        x=alt.X(
+            "dosya2:N",
+            sort=sira,
+            title=None,
+            axis=alt.Axis(labelAngle=-40, labelLimit=250)
+        ),
+        y=alt.Y(
+            "dosya1:N",
+            sort=sira,
+            title=None,
+            axis=alt.Axis(labelLimit=250)
+        ),
     )
-    hucreler = temel.mark_rect(stroke="white", strokeWidth=2).encode(
-        color=alt.Color("oran:Q", scale=alt.Scale(domain=[0, 100], range=ISI_HARITASI_RENKLERI),
-                        legend=alt.Legend(title="Benzerlik (%)")),
-        tooltip=[alt.Tooltip("dosya1:N", title="1. Dosya"), alt.Tooltip("dosya2:N", title="2. Dosya"),
-                 alt.Tooltip("oran:Q", title="Benzerlik (%)", format=".2f")],
+
+    hucreler = temel.mark_rect(
+        stroke="white",
+        strokeWidth=2
+    ).encode(
+        color=alt.Color(
+            "oran:Q",
+            scale=alt.Scale(
+                domain=[0, 100],
+                range=ISI_HARITASI_RENKLERI
+            ),
+            legend=alt.Legend(title="Benzerlik (%)")
+        ),
+        tooltip=[
+            alt.Tooltip("dosya1:N", title="1. Dosya"),
+            alt.Tooltip("dosya2:N", title="2. Dosya"),
+            alt.Tooltip(
+                "oran:Q",
+                title="Benzerlik (%)",
+                format=".2f"
+            ),
+        ],
     )
-    #Koyu hücrelerde beyaz, açık hücrelerde siyah yazı kullanıyoruz.
+
     etiketler = temel.mark_text(fontSize=12).encode(
         text=alt.Text("oran:Q", format=".0f"),
-        color=alt.condition(alt.datum.oran >= 55, alt.value("white"), alt.value("#1f1f1f")),
+        color=alt.condition(
+            alt.datum.oran >= 55,
+            alt.value("white"),
+            alt.value("#1f1f1f")
+        ),
     )
+
     boyut = max(300, 60 * len(sira))
-    return (hucreler + etiketler).properties(width=boyut, height=boyut)
+
+    return (
+        hucreler + etiketler
+    ).properties(width=boyut, height=boyut)
 
 
-#---ARAYÜZ---
-st.set_page_config(page_title="İntihal Tespit Sistemi", layout="wide")
+# --------------------------------------------------
+# ARAYÜZ
+# --------------------------------------------------
+
+st.set_page_config(
+    page_title="İntihal Tespit Sistemi",
+    layout="wide"
+)
+
 arsiv_tablosunu_hazirla()
+
 st.title("İntihal Tespit Sistemi")
 
-#Kenar çubuğu: ön işleme ayarları (seçime göre tüm yöntemler yeniden hesaplanır)
+
+# --------------------------------------------------
+# ÖN İŞLEME AYARLARI
+# --------------------------------------------------
+
 st.sidebar.header("Ön İşleme Ayarları")
-st.sidebar.caption("Temizleme (küçük harf, noktalama ve sayı silme) her zaman yapılır.")
-dolgu_cikar = st.sidebar.checkbox("Dolgu kelimelerini çıkar", help="ve, ile, bu, için gibi yaygın kelimeleri siler.")
-kok_bul = st.sidebar.checkbox("Kelime köklerini kullan", help="Örn: öğrencilerin -> öğrenci")
+
+st.sidebar.caption(
+    "Temizleme (küçük harf, noktalama ve sayı silme) "
+    "her zaman yapılır."
+)
+
+dolgu_cikar = st.sidebar.checkbox(
+    "Dolgu kelimelerini çıkar",
+    help="ve, ile, bu, için gibi yaygın kelimeleri siler."
+)
+
+kok_bul = st.sidebar.checkbox(
+    "Kelime köklerini kullan",
+    help="Örn: öğrencilerin -> öğrenci"
+)
+
 if kok_bul and not KOK_BULMA_KULLANILABILIR:
-    st.sidebar.warning("snowballstemmer paketi yüklü değil; kök bulma atlandı. Kurmak için: pip install snowballstemmer")
+    st.sidebar.warning(
+        "snowballstemmer paketi yüklü değil; kök bulma atlandı. "
+        "Kurmak için: pip install snowballstemmer"
+    )
     kok_bul = False
+
 
 iki_dosya_sekmesi, coklu_sekme, arsiv_sekmesi = st.tabs(
     ["İki Dosya", "Çoklu Karşılaştırma", "Ödev Arşivi"]
 )
 
-#---1. SEKME: İKİ DOSYA---
+
+# ==================================================
+# 1. SEKME: İKİ DOSYA
+# ==================================================
+
 with iki_dosya_sekmesi:
-    st.write("İki ödev dosyası yükleyin (TXT, PDF veya DOCX). Sistem metinleri üç farklı yöntemle karşılaştırır.")
+
+    st.write(
+        "İki ödev dosyası yükleyin (TXT, PDF veya DOCX). "
+        "Sistem metinleri üç farklı yöntemle karşılaştırır."
+    )
 
     sol, sag = st.columns(2)
-    dosya1 = sol.file_uploader("1. Ödev", type=DOSYA_TURLERI)
-    dosya2 = sag.file_uploader("2. Ödev", type=DOSYA_TURLERI)
+
+    dosya1 = sol.file_uploader(
+        "1. Ödev",
+        type=DOSYA_TURLERI,
+        key="iki_dosya_1"
+    )
+
+    dosya2 = sag.file_uploader(
+        "2. Ödev",
+        type=DOSYA_TURLERI,
+        key="iki_dosya_2"
+    )
 
     ham1 = dosya_oku(dosya1) if dosya1 else None
     ham2 = dosya_oku(dosya2) if dosya2 else None
-    temiz1 = metin_on_isle(ham1, dolgu_cikar, kok_bul) if ham1 is not None else ""
-    temiz2 = metin_on_isle(ham2, dolgu_cikar, kok_bul) if ham2 is not None else ""
+
+    temiz1 = (
+        metin_on_isle(ham1, dolgu_cikar, kok_bul)
+        if ham1 is not None else ""
+    )
+
+    temiz2 = (
+        metin_on_isle(ham2, dolgu_cikar, kok_bul)
+        if ham2 is not None else ""
+    )
 
     if not (dosya1 and dosya2):
+
         st.info("Karşılaştırma için iki dosya yükleyin.")
+
     elif ham1 is None or ham2 is None:
-        pass #Okunamayan dosya için hata mesajı dosya_oku içinde gösterildi.
+
+        pass
+
     elif not temiz1 or not temiz2:
-        st.error("Dosyalardan en az biri boş veya okunabilir metin içermiyor.")
+
+        st.error(
+            "Dosyalardan en az biri boş veya okunabilir metin içermiyor."
+        )
+
     else:
-        sonuclar = {yontem: hesapla(temiz1, temiz2) for yontem, hesapla in YONTEMLER.items()}
 
-        st.subheader("Benzerlik Sonuçları")
-        for sutun, (yontem, oran) in zip(st.columns(3), sonuclar.items()):
+        # ------------------------------------------
+        # GENEL BENZERLİK ANALİZİ
+        # ------------------------------------------
+
+        sonuclar = {
+            yontem: hesapla(temiz1, temiz2)
+            for yontem, hesapla in YONTEMLER.items()
+        }
+
+        st.subheader("Genel Benzerlik Sonuçları")
+
+        for sutun, (yontem, oran) in zip(
+            st.columns(3),
+            sonuclar.items()
+        ):
             sutun.metric(yontem, f"%{oran:.2f}")
-        st.caption("Benzerlik yüzdeleri metinlerin içerik benzerliğini gösterir; tek başına intihal kanıtı değildir.")
 
-        grafik_verisi = pd.DataFrame({"Benzerlik (%)": list(sonuclar.values())}, index=list(sonuclar.keys()))
+        st.caption(
+            "Benzerlik yüzdeleri metinlerin içerik benzerliğini gösterir; "
+            "tek başına intihal kanıtı değildir."
+        )
+
+        grafik_verisi = pd.DataFrame(
+            {"Benzerlik (%)": list(sonuclar.values())},
+            index=list(sonuclar.keys())
+        )
+
         st.bar_chart(grafik_verisi)
 
+        # ------------------------------------------
+        # ORTAK KELİME VE BIGRAM ANALİZİ
+        # ------------------------------------------
+
         kelimeler = ortak_kelimeler(temiz1, temiz2)
-        bigramlar = ortak_ngramlar(temiz1, temiz2, n=2)
+
+        bigramlar = ortak_ngramlar(
+            temiz1,
+            temiz2,
+            n=2
+        )
+
         sol, sag = st.columns(2)
+
         sol.metric("Ortak kelime sayısı", len(kelimeler))
         sag.metric("Ortak bigram sayısı", len(bigramlar))
+
         with st.expander(f"Ortak kelimeler ({len(kelimeler)})"):
-            st.write(", ".join(kelimeler) if kelimeler else "Ortak kelime yok.")
+            st.write(
+                ", ".join(kelimeler)
+                if kelimeler else "Ortak kelime yok."
+            )
+
         with st.expander(f"Ortak bigramlar ({len(bigramlar)})"):
-            st.write(", ".join(bigramlar) if bigramlar else "Ortak bigram yok.")
+            st.write(
+                ", ".join(bigramlar)
+                if bigramlar else "Ortak bigram yok."
+            )
+
+        # ------------------------------------------
+        # YENİ ÖZELLİK: BÖLÜM BAZLI ANALİZ
+        # ------------------------------------------
+
+        st.divider()
+
+        st.subheader("Bölüm Bazlı Benzerlik Analizi")
+
+        st.write(
+            "Belgelerdeki aynı başlıklara sahip bölümler "
+            "ayrı ayrı karşılaştırılır."
+        )
+
+        bolumler1 = bolumlere_ayir(ham1)
+        bolumler2 = bolumlere_ayir(ham2)
+
+        ortak_bolumler = [
+            anahtar
+            for anahtar in bolumler1
+            if anahtar in bolumler2
+        ]
+
+        if ortak_bolumler:
+
+            bolum_sonuclari = []
+
+            for anahtar in ortak_bolumler:
+
+                bolum1 = metin_on_isle(
+                    bolumler1[anahtar]["metin"],
+                    dolgu_cikar,
+                    kok_bul
+                )
+
+                bolum2 = metin_on_isle(
+                    bolumler2[anahtar]["metin"],
+                    dolgu_cikar,
+                    kok_bul
+                )
+
+                sonuc = {
+                    "Bölüm": bolumler1[anahtar]["baslik"]
+                }
+
+                for yontem_adi, hesapla in YONTEMLER.items():
+
+                    oran = hesapla(bolum1, bolum2)
+
+                    sonuc[yontem_adi] = round(
+                        float(oran),
+                        2
+                    )
+
+                bolum_sonuclari.append(sonuc)
+
+            bolum_tablosu = pd.DataFrame(bolum_sonuclari)
+
+            st.write("Bölümlere göre benzerlik sonuçları:")
+
+            st.dataframe(
+                bolum_tablosu,
+                hide_index=True,
+                width="stretch"
+            )
+
+            st.write("Bölüm bazlı benzerlik grafiği:")
+
+            grafik = bolum_tablosu.set_index("Bölüm")
+
+            st.bar_chart(grafik)
+
+            st.download_button(
+                "Bölüm analizini CSV olarak indir",
+                csv_baytlari(bolum_tablosu),
+                file_name="bolum_bazli_benzerlik.csv",
+                mime="text/csv"
+            )
+
+        else:
+
+            st.warning(
+                "İki belgede aynı isimli bölüm bulunamadı. "
+                "Bölüm bazlı karşılaştırma yapılamadı."
+            )
+
+        st.caption(
+            "Yalnızca iki belgede de bulunan aynı başlıklı bölümler "
+            "karşılaştırılır. Başlık bulunamazsa belge tek bölüm "
+            "olarak değerlendirilir."
+        )
+
+        # ------------------------------------------
+        # ÇIKARILAN METİNLER
+        # ------------------------------------------
 
         with st.expander("Çıkarılan metinleri görüntüle"):
+
             sol, sag = st.columns(2)
-            sol.text_area(dosya1.name, ham1, height=300)
-            sag.text_area(dosya2.name, ham2, height=300)
 
-#---2. SEKME: ÇOKLU KARŞILAŞTIRMA---
+            sol.text_area(
+                dosya1.name,
+                ham1,
+                height=300
+            )
+
+            sag.text_area(
+                dosya2.name,
+                ham2,
+                height=300
+            )
+
+
+# ==================================================
+# 2. SEKME: ÇOKLU KARŞILAŞTIRMA
+# ==================================================
+
 with coklu_sekme:
-    st.write("En az 3 ödev yükleyin. Sistem tüm dosya çiftlerini karşılaştırır ve şüpheli eşleşmeleri listeler.")
 
-    dosyalar = st.file_uploader("Ödevler", type=DOSYA_TURLERI, accept_multiple_files=True)
+    st.write(
+        "En az 3 ödev yükleyin. Sistem tüm dosya çiftlerini "
+        "karşılaştırır ve şüpheli eşleşmeleri listeler."
+    )
+
+    dosyalar = st.file_uploader(
+        "Ödevler",
+        type=DOSYA_TURLERI,
+        accept_multiple_files=True,
+        key="coklu_dosyalar"
+    )
+
     sol, sag = st.columns(2)
-    yontem = sol.selectbox("Yöntem", list(YONTEMLER), index=1)
-    esik = sag.slider("Şüphe eşiği (%)", min_value=0, max_value=100, value=50, step=5)
+
+    yontem = sol.selectbox(
+        "Yöntem",
+        list(YONTEMLER),
+        index=1
+    )
+
+    esik = sag.slider(
+        "Şüphe eşiği (%)",
+        min_value=0,
+        max_value=100,
+        value=50,
+        step=5
+    )
 
     metinler = {}
+
     if len(dosyalar) >= 3:
+
         for dosya in dosyalar:
+
             ad = dosya.name
             sayac = 2
-            while ad in metinler: #Aynı adlı iki dosya yüklenirse birbirinin üzerine yazmasın
+
+            while ad in metinler:
                 ad = f"{dosya.name} ({sayac})"
                 sayac += 1
+
             ham = dosya_oku(dosya)
+
             if ham is None:
                 continue
-            metinler[ad] = metin_on_isle(ham, dolgu_cikar, kok_bul)
+
+            metinler[ad] = metin_on_isle(
+                ham,
+                dolgu_cikar,
+                kok_bul
+            )
+
             if not metinler[ad]:
-                st.warning(f"{ad} boş veya okunabilir metin içermiyor; benzerlik oranları %0 çıkacaktır.")
+                st.warning(
+                    f"{ad} boş veya okunabilir metin içermiyor."
+                )
 
     if len(dosyalar) < 3:
-        st.info(f"Çoklu karşılaştırma için en az 3 dosya yükleyin (şu an: {len(dosyalar)}).")
+
+        st.info(
+            f"Çoklu karşılaştırma için en az 3 dosya yükleyin "
+            f"(şu an: {len(dosyalar)})."
+        )
+
     elif len(metinler) < 3:
+
         st.error("Okunabilen dosya sayısı 3'ün altında kaldı.")
+
     else:
+
         matris = benzerlik_matrisi(metinler, yontem)
+
         supheliler = supheli_eslesmeler(matris, esik)
 
         st.subheader(f"Benzerlik Matrisi ({yontem})")
-        st.dataframe(matris.round(2), width="stretch")
-        st.altair_chart(isi_haritasi(matris))
+
+        st.dataframe(
+            matris.round(2),
+            width="stretch"
+        )
+
+        st.altair_chart(
+            isi_haritasi(matris),
+            width="stretch"
+        )
 
         st.subheader(f"Şüpheli eşleşmeler (≥ %{esik})")
+
         if supheliler.empty:
+
             st.success("Eşiği aşan dosya çifti yok.")
+
         else:
-            st.dataframe(supheliler, hide_index=True, width="stretch")
+
+            st.dataframe(
+                supheliler,
+                hide_index=True,
+                width="stretch"
+            )
 
         sol, sag = st.columns(2)
-        sol.download_button("Benzerlik matrisini indir (CSV)", csv_baytlari(matris.round(2), index=True),
-                            file_name="benzerlik_matrisi.csv", mime="text/csv")
-        sag.download_button("Şüpheli eşleşmeleri indir (CSV)", csv_baytlari(supheliler),
-                            file_name="supheli_eslesmeler.csv", mime="text/csv")
 
-# --- 3. SEKME: ÖDEV ARŞİVİ ---
+        sol.download_button(
+            "Benzerlik matrisini indir (CSV)",
+            csv_baytlari(matris.round(2), index=True),
+            file_name="benzerlik_matrisi.csv",
+            mime="text/csv"
+        )
+
+        sag.download_button(
+            "Şüpheli eşleşmeleri indir (CSV)",
+            csv_baytlari(supheliler),
+            file_name="supheli_eslesmeler.csv",
+            mime="text/csv"
+        )
+
+
+# ==================================================
+# 3. SEKME: ÖDEV ARŞİVİ
+# ==================================================
+
 with arsiv_sekmesi:
+
     st.subheader("Ödev Arşivi")
+
     st.write(
         "Yeni bir ödev yükleyerek arşive kaydedebilir ve "
         "arşivden seçtiğiniz ödevlerle karşılaştırabilirsiniz."
@@ -187,10 +523,8 @@ with arsiv_sekmesi:
         key="arsiv_dosyasi"
     )
 
-    # Arşivdeki mevcut ödevleri listele
     arsiv_kayitlari = arsiv_listesi()
 
-    # Karşılaştırılacak ödevleri kullanıcı seçsin
     secenekler = {
         f'{kayit["dosya_adi"]} (ID: {kayit["id"]})': kayit["id"]
         for kayit in arsiv_kayitlari
@@ -204,7 +538,8 @@ with arsiv_sekmesi:
     )
 
     secilen_idler = [
-        secenekler[etiket] for etiket in secilen_etiketler
+        secenekler[etiket]
+        for etiket in secilen_etiketler
     ]
 
     arsiv_yontemi = st.selectbox(
@@ -213,20 +548,35 @@ with arsiv_sekmesi:
         key="arsiv_yontemi"
     )
 
-    if st.button("Arşive Ekle ve Karşılaştır", type="primary"):
+    if st.button(
+        "Arşive Ekle ve Karşılaştır",
+        type="primary"
+    ):
+
         if yeni_dosya is None:
+
             st.warning("Lütfen bir ödev dosyası seçin.")
+
         else:
+
             ham_metin = dosya_oku(yeni_dosya)
 
             if ham_metin is not None:
+
                 temiz_metin = metin_on_isle(
-                    ham_metin, dolgu_cikar, kok_bul
+                    ham_metin,
+                    dolgu_cikar,
+                    kok_bul
                 )
 
                 if not temiz_metin:
-                    st.error("Dosyada analiz edilebilir metin bulunamadı.")
+
+                    st.error(
+                        "Dosyada analiz edilebilir metin bulunamadı."
+                    )
+
                 else:
+
                     kayit_id, yeni_eklendi = arsive_ekle(
                         yeni_dosya.name,
                         ham_metin,
@@ -234,52 +584,75 @@ with arsiv_sekmesi:
                     )
 
                     if yeni_eklendi:
+
                         st.success("Ödev arşive kaydedildi.")
+
                     else:
+
                         st.info(
                             "Bu dosya daha önce arşive eklenmiş. "
                             "Mevcut kayıt üzerinden işlem yapılıyor."
                         )
 
                     if not secilen_idler:
+
                         st.info(
                             "Karşılaştırma yapmak için arşivden ödev seçin. "
                             "Dosya arşive kaydedildi."
                         )
+
                     else:
+
                         eski_odevler = arsiv_metinlerini_getir(
                             kayit_idleri=secilen_idler,
                             haric_id=kayit_id
                         )
 
                         if not eski_odevler:
+
                             st.info(
                                 "Seçtiğiniz ödevler arasında "
                                 "karşılaştırılabilecek başka kayıt bulunamadı."
                             )
+
                         else:
+
                             hesapla = YONTEMLER[arsiv_yontemi]
+
                             sonuclar = []
 
                             for odev in eski_odevler:
+
                                 eski_temiz = metin_on_isle(
-                                    odev["metin"], dolgu_cikar, kok_bul
+                                    odev["metin"],
+                                    dolgu_cikar,
+                                    kok_bul
                                 )
 
-                                oran = hesapla(temiz_metin, eski_temiz)
+                                oran = hesapla(
+                                    temiz_metin,
+                                    eski_temiz
+                                )
 
                                 sonuclar.append({
                                     "Arşivdeki Ödev": odev["dosya_adi"],
-                                    "Benzerlik (%)": round(float(oran), 2)
+                                    "Benzerlik (%)": round(
+                                        float(oran),
+                                        2
+                                    )
                                 })
 
                             sonuc_tablosu = pd.DataFrame(sonuclar)
+
                             sonuc_tablosu = sonuc_tablosu.sort_values(
                                 "Benzerlik (%)",
                                 ascending=False
                             ).reset_index(drop=True)
 
-                            st.subheader("Arşiv Karşılaştırma Sonuçları")
+                            st.subheader(
+                                "Arşiv Karşılaştırma Sonuçları"
+                            )
+
                             st.dataframe(
                                 sonuc_tablosu,
                                 hide_index=True,
@@ -287,7 +660,9 @@ with arsiv_sekmesi:
                             )
 
                             st.bar_chart(
-                                sonuc_tablosu.set_index("Arşivdeki Ödev")
+                                sonuc_tablosu.set_index(
+                                    "Arşivdeki Ödev"
+                                )
                             )
 
     st.divider()
@@ -297,7 +672,11 @@ with arsiv_sekmesi:
     kayitlar = arsiv_listesi()
 
     if kayitlar:
-        st.metric("Arşivdeki toplam ödev", len(kayitlar))
+
+        st.metric(
+            "Arşivdeki toplam ödev",
+            len(kayitlar)
+        )
 
         st.dataframe(
             pd.DataFrame(kayitlar),
@@ -317,9 +696,13 @@ with arsiv_sekmesi:
         )
 
         if st.button("Seçilen Ödevi Arşivden Sil"):
+
             arsivden_sil(silme_secenekleri[secilen])
+
             st.success("Ödev arşivden silindi.")
+
             st.rerun()
 
     else:
+
         st.info("Arşivde henüz kayıtlı ödev bulunmuyor.")
