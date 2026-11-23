@@ -262,83 +262,97 @@ def bolum_basligini_normalize_et(baslik):
     return metin_temizle(baslik)
 
 
+
 def bolumlere_ayir(metin):
     """
-    Numaralı başlıkları algılayarak metni bölümlere ayırır.
-
-    Örnek:
-    1. GİRİŞ
-    1.1 Amaç
-    2. YÖNTEM
-    3. SONUÇ
-
-    Aynı isimli başlıklar tek bölüm altında birleştirilir.
-    Başlık bulunamazsa belge tek bölüm kabul edilir.
+    Numaralı ve numarasız başlıkları algılayarak
+    metni bölümlere ayırır.
     """
 
     bolumler = {}
 
     aktif_baslik = None
-
     aktif_metin = []
 
+    bilinen_basliklar = {
+    "giriş",
+    "gelişme",
+    "sonuç",
+    "yöntem",
+    "amaç",
+    "kapsam",
+    "özet",
+    "abstract",
+    "bulgular",
+    "tartışma",
+    "değerlendirme",
+    "öneriler",
+    "kaynakça",
+    "genel bilgiler",
+    "materyal ve yöntem",
+    "problem tanımı"
+}
+
     def bolumu_kaydet():
-
         if aktif_baslik is not None:
-
-            icerik = "\n".join(
-                aktif_metin
-            ).strip()
+            icerik = "\n".join(aktif_metin).strip()
 
             if icerik:
-
                 anahtar = bolum_basligini_normalize_et(
                     aktif_baslik
                 )
 
                 if anahtar in bolumler:
-
                     bolumler[anahtar]["metin"] += (
                         "\n" + icerik
                     )
-
                 else:
-
                     bolumler[anahtar] = {
                         "baslik": aktif_baslik,
                         "metin": icerik
                     }
 
     for satir in metin.splitlines():
-
         satir = satir.strip()
 
+        if not satir:
+            if aktif_baslik is not None:
+                aktif_metin.append("")
+            continue
+
         # Numaralı başlıkları algıla.
-        eslesme = re.match(
-            r"^\s*(\d+(?:\.\d+)*\.?)\s+(.{2,100})$",
+        numarali = re.match(
+            r"^\s*\d+(?:\.\d+)*\.?\s+(.{2,100})$",
             satir
         )
 
-        if (
-            eslesme
-            and not satir.endswith((".", ",", ";"))
-        ):
+        if numarali:
+            aday_baslik = numarali.group(1).strip()
+            baslik = bolum_basligini_normalize_et(
+                aday_baslik
+            )
 
+            if baslik in bilinen_basliklar:
+                bolumu_kaydet()
+                aktif_baslik = aday_baslik
+                aktif_metin = []
+                continue
+
+        # Numarasız başlıkları algıla.
+        baslik = bolum_basligini_normalize_et(satir)
+
+        if baslik in bilinen_basliklar:
             bolumu_kaydet()
-
-            aktif_baslik = eslesme.group(2).strip()
-
+            aktif_baslik = satir
             aktif_metin = []
 
         elif aktif_baslik is not None:
-
             aktif_metin.append(satir)
 
     bolumu_kaydet()
 
-    # Başlık bulunamadıysa bütün metni tek bölüm yap.
+    # Hiç başlık bulunamazsa bütün belgeyi tek bölüm kabul et.
     if not bolumler:
-
         return {
             "belgenin tamamı": {
                 "baslik": "Belgenin Tamamı",
