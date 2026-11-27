@@ -1,4 +1,3 @@
-
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -25,16 +24,19 @@ from benzerlik import (
 
 DOSYA_TURLERI = ["txt", "pdf", "docx"]
 
+# Isı haritası için tek tonlu mavi skala: açık = düşük benzerlik, koyu = yüksek benzerlik
 ISI_HARITASI_RENKLERI = [
     "#cde2fb", "#86b6ef", "#3987e5", "#1c5cab", "#0d366b"
 ]
 
 
 def csv_baytlari(tablo, index=False):
+    # Excel'in Türkçe karakterleri doğru göstermesi için UTF-8 BOM ile kaydediyoruz.
     return tablo.to_csv(index=index).encode("utf-8-sig")
 
 
 def dosya_oku(dosya):
+    # Bozuk/şifreli PDF veya DOCX uygulamayı çökertmesin; hatayı gösterip None döndürüyoruz.
     try:
         return metin_cikar(dosya.name, dosya.getvalue())
     except Exception as hata:
@@ -43,6 +45,7 @@ def dosya_oku(dosya):
 
 
 def isi_haritasi(matris):
+    # Altair alan adlarındaki "." işaretini iç içe alan sandığı için noktasız adlar kullanıyoruz.
     veri = (
         matris.rename_axis("dosya1")
         .reset_index()
@@ -93,6 +96,7 @@ def isi_haritasi(matris):
         ],
     )
 
+    # Koyu hücrelerde beyaz, açık hücrelerde siyah yazı kullanıyoruz.
     etiketler = temel.mark_text(fontSize=12).encode(
         text=alt.Text("oran:Q", format=".0f"),
         color=alt.condition(
@@ -201,7 +205,7 @@ with iki_dosya_sekmesi:
 
     elif ham1 is None or ham2 is None:
 
-        pass
+        pass  # Okunamayan dosya için hata mesajı dosya_oku içinde gösterildi.
 
     elif not temiz1 or not temiz2:
 
@@ -424,6 +428,7 @@ with coklu_sekme:
             ad = dosya.name
             sayac = 2
 
+            # Aynı adlı iki dosya yüklenirse birbirinin üzerine yazmasın.
             while ad in metinler:
                 ad = f"{dosya.name} ({sayac})"
                 sayac += 1

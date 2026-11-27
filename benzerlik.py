@@ -1,4 +1,3 @@
-
 """İntihal tespiti için hesaplama fonksiyonları.
 
 Bu modül Streamlit'ten bağımsızdır; app.py, testler ve
@@ -32,7 +31,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # ==================================================
 
 def metin_cikar(dosya_adi, icerik):
-    """Dosyanın uzantısına göre metin çıkarır."""
+    """Dosyanın uzantısına göre içindeki (bayt olarak verilen) metni çıkarır."""
 
     dosya_adi = dosya_adi.lower()
 
@@ -65,7 +64,7 @@ def metin_cikar(dosya_adi, icerik):
 
 
 def dosyadan_metin_oku(dosya_yolu):
-    """Diskteki bir dosyayı okuyup metnini döndürür."""
+    """Diskteki bir dosyayı okuyup metnini döndürür (testler ve betikler için)."""
 
     dosya_yolu = Path(dosya_yolu)
 
@@ -79,6 +78,8 @@ def dosyadan_metin_oku(dosya_yolu):
 # 2. METİN ÖN İŞLEME
 # ==================================================
 
+# Kesme işaretleri silinir ("Türkiye'nin" -> "türkiyenin"),
+# diğer işaretler ve sayılar boşluğa çevrilir.
 KESME_ISARETLERI = "'’‘"
 
 NOKTALAMA_ISARETLERI = (
@@ -109,6 +110,10 @@ SAPKA_TABLOSU = str.maketrans(
 def turkce_kucuk_harf(metin):
     """Türkçe karakterlere uygun küçük harf dönüşümü."""
 
+    # Python'un lower() fonksiyonu "İ" harfini "i̇" (i + birleşik nokta),
+    # "I" harfini ise "i" yapar; Türkçede doğrusu "i" ve "ı"dır.
+    # Bu yüzden önce Türkçeye özgü harfleri elle çeviriyoruz.
+
     return (
         metin.replace("I", "ı")
         .replace("İ", "i")
@@ -118,21 +123,26 @@ def turkce_kucuk_harf(metin):
 
 def metin_temizle(metin):
 
+    # PDF'ten gelen ayrık harfleri (I + ̇) tek karakterde birleştiriyoruz.
     metin = unicodedata.normalize(
         "NFC",
         metin
     )
 
+    # Tüm harfleri Türkçe kurallarına göre küçük harfe çeviriyoruz.
     metin = turkce_kucuk_harf(metin)
 
+    # "zekâ" ile "zeka" aynı kelime sayılsın diye şapkaları kaldırıyoruz.
     metin = metin.translate(
         SAPKA_TABLOSU
     )
 
+    # Noktalama işaretlerini ve sayıları temizliyoruz.
     metin = metin.translate(
         TEMIZLEME_TABLOSU
     )
 
+    # Fazla boşlukları siliyoruz.
     return " ".join(metin.split())
 
 
@@ -151,6 +161,7 @@ def dolgu_kelimelerini_yukle(
     dosya_yolu=DOLGU_KELIMELERI_DOSYASI
 ):
 
+    # Boş satırları ve "#" ile başlayan açıklama satırlarını atlayarak kelimeleri okuyoruz.
     satirlar = Path(dosya_yolu).read_text(
         encoding="utf-8"
     ).splitlines()
@@ -166,6 +177,7 @@ def dolgu_kelimelerini_yukle(
 DOLGU_KELIMELERI = dolgu_kelimelerini_yukle()
 
 
+# snowballstemmer yüklü değilse uygulama çökmesin; kök bulma atlanır ve uyarı verilir.
 try:
 
     import snowballstemmer
@@ -222,6 +234,7 @@ def metin_on_isle(
     kok_bul=False
 ):
 
+    # Temizleme her zaman yapılır; dolgu çıkarma ve kök bulma isteğe bağlıdır.
     metin = metin_temizle(metin)
 
     if dolgu_cikar:
@@ -368,6 +381,7 @@ def bolumlere_ayir(metin):
 # ==================================================
 
 def jaccard_benzerligi(metin1, metin2):
+    # Formül = (Ortak kelime sayısı) / (Toplam benzersiz kelime sayısı) * 100
 
     kume1 = set(metin1.split())
 
@@ -390,6 +404,10 @@ def jaccard_benzerligi(metin1, metin2):
 
 def tfidf_benzerligi(metin1, metin2):
 
+    # Metinleri TF-IDF vektörlerine çevirip aralarındaki kosinüs benzerliğini buluyoruz.
+    # Metin metin_temizle ile zaten Türkçe kurallarına göre küçültüldüğü için
+    # lowercase=False kullanıyoruz; aksi hâlde scikit-learn Python'un lower()
+    # fonksiyonunu tekrar uygular ve İ/I harflerini yeniden yanlış küçültür.
     try:
 
         vektorler = TfidfVectorizer(
@@ -398,7 +416,7 @@ def tfidf_benzerligi(metin1, metin2):
             [metin1, metin2]
         )
 
-    except ValueError:
+    except ValueError:  # Metinlerde hiç kelime yoksa
 
         return 0.0
 
@@ -416,6 +434,8 @@ def ngram_benzerligi(
     n=2
 ):
 
+    # Ardışık n kelimelik grupları (n-gram) sayıp kosinüs benzerliğini buluyoruz.
+    # lowercase=False: TF-IDF'teki gibi Türkçe İ/I harfleri bozulmasın diye.
     try:
 
         vektorler = CountVectorizer(
@@ -425,7 +445,7 @@ def ngram_benzerligi(
             [metin1, metin2]
         )
 
-    except ValueError:
+    except ValueError:  # Metin n kelimeden kısaysa
 
         return 0.0
 
@@ -500,6 +520,8 @@ def benzerlik_matrisi(
     metinler,
     yontem="TF-IDF + Kosinüs"
 ):
+    # metinler: {dosya_adi: on_islenmis_metin}.
+    # Tüm dosya çiftleri için simetrik benzerlik tablosu döndürür.
     hesapla = YONTEMLER[yontem]
 
     adlar = list(metinler)
@@ -529,6 +551,7 @@ def supheli_eslesmeler(
     esik=50
 ):
 
+    # Eşiği aşan dosya çiftlerini (her çift bir kez) en yüksekten düşüğe sıralar.
     adlar = list(matris.index)
 
     satirlar = [

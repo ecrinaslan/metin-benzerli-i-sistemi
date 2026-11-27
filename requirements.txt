@@ -1,4 +1,6 @@
 streamlit>=1.40
+# app.py ısı haritası için doğrudan içe aktarıyor (Streamlit ile birlikte de gelir):
+altair>=5.0
 pandas>=2.0
 pypdf>=4.0
 python-docx>=1.1

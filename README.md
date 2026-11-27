@@ -47,10 +47,12 @@ python Proje_Adimlari/10_hafta5_test_sonuclari.py
 ```
 
 ### Proje yapısı
-* `app.py` – Streamlit arayüzü ("İki Dosya" ve "Çoklu Karşılaştırma" sekmeleri)
-* `benzerlik.py` – Tüm hesaplama fonksiyonları (metin çıkarma, temizleme, ön işleme, Jaccard, TF-IDF, n-gram, benzerlik matrisi)
+* `app.py` – Streamlit arayüzü ("İki Dosya", "Çoklu Karşılaştırma" ve "Ödev Arşivi" sekmeleri)
+* `benzerlik.py` – Tüm hesaplama fonksiyonları (metin çıkarma, temizleme, ön işleme, bölümlere ayırma, Jaccard, TF-IDF, n-gram, benzerlik matrisi)
+* `arsiv.py` – Ödev arşivi için SQLite işlemleri (ekleme, listeleme, seçerek getirme, silme)
+* `odev_arsivi.db` – Uygulama ilk çalıştığında otomatik oluşturulan arşiv veritabanı (git'e eklenmez)
 * `turkce_dolgu_kelimeleri.txt` – Türkçe dolgu kelimeleri listesi
-* `tests/` – pytest testleri
+* `tests/` – pytest testleri (`test_benzerlik.py`, `test_bolumler.py`, `test_arsiv.py`)
 * `Odevler/` – Test senaryosu metinleri (ayrıntılar `Odevler/README.md` içinde)
 * `Proje_Adimlari/` – Her haftanın ara adım dosyaları
 * `araclar/ornek_dosyalari_uret.py` – Örnek ödevin DOCX ve PDF kopyalarını üretir
@@ -63,3 +65,8 @@ python Proje_Adimlari/10_hafta5_test_sonuclari.py
 * **Test senaryoları:** `Odevler/` altında birebir kopya, kısmi kopya, eş anlamlı değişiklik, cümle sırası değişikliği, farklı konu, aynı konuda özgün ödev ve Türkçe büyük harf senaryoları (TXT, DOCX ve PDF).
 * **Otomatik testler:** `tests/test_benzerlik.py` içinde pytest testleri.
 * **Sonuç tablosu:** `Proje_Adimlari/10_hafta5_test_sonuclari.py` üç ön işleme ayarında beş yöntemin sonuçlarını üretiyor.
+
+## 7. Sonraki Haftalarda Eklenen Özellikler
+* **Ödev Arşivi:** "Ödev Arşivi" sekmesinden yüklenen ödevler SQLite veritabanına (`odev_arsivi.db`) kaydedilir. Aynı içerikteki dosya SHA-256 özetiyle tanınır ve ikinci kez eklenmez. Yeni ödev, arşivden seçilen ödevlerle seçilen yöntemle karşılaştırılır; arşivdeki kayıtlar listelenip silinebilir. Veritabanı için ek kurulum gerekmez (Python'un `sqlite3` modülü kullanılır).
+* **Bölüm Bazlı Analiz:** "İki Dosya" sekmesinde belgeler başlıklarına göre (Giriş, Yöntem, Bulgular, Sonuç, Kaynakça vb.) bölümlere ayrılır. Hem numaralı ("1. GİRİŞ") hem numarasız ("Giriş") başlıklar tanınır ve iki belgede de bulunan aynı başlıklı bölümler üç yöntemle ayrı ayrı karşılaştırılır; sonuçlar tablo, grafik ve CSV olarak sunulur. Başlık bulunamazsa belge tek bölüm olarak değerlendirilir.
+* **Ek testler:** `tests/test_bolumler.py` bölümlere ayırma ve başlık normalizasyonunu, `tests/test_arsiv.py` arşiv işlemlerini test eder. Arşiv testleri gerçek veritabanını değiştirmemek için geçici bir veritabanı kullanır.
