@@ -17,4 +17,4 @@ Bu klasördeki metinler sistemi farklı intihal senaryolarıyla denemek için ha
 
 DOCX ve PDF dosyaları `python araclar/ornek_dosyalari_uret.py` komutuyla `01_orijinal.txt` dosyasından yeniden üretilebilir.
 
-> Not: Bu klasördeki `main.py` eski `odev1.txt` / `odev2.txt` dosyalarını okuyan ilk deneme dosyasıdır ve artık kullanılmamaktadır.
+> Not: `odev1.txt` ve `odev2.txt`, `Proje_Adimlari/` altındaki ilk haftaların adım betiklerinde kullanılan kısa deneme metinleridir.

@@ -169,7 +169,7 @@ with iki_dosya_sekmesi:
 
     st.write(
         "İki ödev dosyası yükleyin (TXT, PDF veya DOCX). "
-        "Sistem metinleri üç farklı yöntemle karşılaştırır."
+        "Sistem metinleri farklı yöntemlerle karşılaştırır."
     )
 
     sol, sag = st.columns(2)
@@ -227,7 +227,7 @@ with iki_dosya_sekmesi:
         st.subheader("Genel Benzerlik Sonuçları")
 
         for sutun, (yontem, oran) in zip(
-            st.columns(3),
+            st.columns(len(sonuclar)),  # Her yöntem için bir sütun
             sonuclar.items()
         ):
             sutun.metric(yontem, f"%{oran:.2f}")

@@ -1,0 +1,8 @@
+﻿Dosya,Senaryo,Jaccard,TF-IDF,Bigram,Anlamsal
+02_birebir_kopya.txt,Birebir kopya,97.68,99.13,98.35,99.64
+03_kismi_kopya.txt,Kısmi kopya,42.15,69.34,55.44,79.11
+04_esanlamli_degisiklik.txt,Eş anlamlı değişiklik,10.39,45.75,8.01,83.9
+05_cumle_sirasi_degisik.txt,Cümle sırası değişik,98.45,99.5,92.88,80.74
+06_farkli_konu.txt,Farklı konu,6.37,28.35,1.19,24.1
+07_ayni_konu_ozgun.txt,"Aynı konu, özgün",9.11,42.15,5.28,77.09
+08_buyuk_harf_turkce.txt,Türkçe büyük harf,98.45,99.5,99.18,99.14

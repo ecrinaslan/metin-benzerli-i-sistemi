@@ -4,6 +4,7 @@ Bu modül Streamlit'ten bağımsızdır; app.py, testler ve
 Proje_Adimlari betikleri buradan içe aktarır.
 """
 
+import importlib.util
 import io
 import re
 import string
@@ -494,6 +495,87 @@ def ortak_ngramlar(
 
 
 # ==================================================
+# 3B. ANLAMSAL BENZERLİK (SEVİYE 3 - NLP MODELİ)
+# ==================================================
+# Jaccard, TF-IDF ve n-gram yalnızca aynı kelimelere bakar; kelimeler eş
+# anlamlılarıyla değiştirildiğinde (öğrenci -> talebe) benzerliği kaçırırlar.
+# Burada Türkçeyi de destekleyen çok dilli bir cümle gömme (sentence
+# embedding) modeli kullanıyoruz: model her metin parçasını anlamını temsil
+# eden bir vektöre çevirir; anlamca yakın parçaların vektörleri de yakındır.
+
+ANLAMSAL_MODEL_ADI = "paraphrase-multilingual-MiniLM-L12-v2"
+
+# Model en fazla 128 token okur, fazlasını sessizce keser. Ödevler yüzlerce
+# kelime olduğu için metni ~80 kelimelik parçalara bölüp her parçayı ayrı
+# vektöre çeviriyoruz (Türkçede 80 kelime yaklaşık 128 tokene denk gelir).
+ANLAMSAL_PARCA_UZUNLUGU = 80
+
+# sentence-transformers (ve torch) büyük paketlerdir; yüklü değilse uygulama
+# çökmesin, yöntem listede görünmesin. Paketi burada içe aktarmıyoruz, sadece
+# var mı diye bakıyoruz; böylece modül (ve testler) hızlı açılır.
+ANLAMSAL_KULLANILABILIR = (
+    importlib.util.find_spec("sentence_transformers") is not None
+)
+
+
+@lru_cache(maxsize=1)
+def anlamsal_model():
+    """Modeli ilk kullanımda bir kez yükler (ilk seferde internetten indirir)."""
+
+    from sentence_transformers import SentenceTransformer
+
+    return SentenceTransformer(ANLAMSAL_MODEL_ADI)
+
+
+def metni_parcala(
+    metin,
+    uzunluk=ANLAMSAL_PARCA_UZUNLUGU
+):
+    """Metni en fazla `uzunluk` kelimelik parçalara böler."""
+
+    kelimeler = metin.split()
+
+    return [
+        " ".join(kelimeler[i:i + uzunluk])
+        for i in range(0, len(kelimeler), uzunluk)
+    ]
+
+
+@lru_cache(maxsize=256)
+def metin_vektorleri(metin):
+    # Çoklu karşılaştırmada aynı metin birçok çiftte yer alır; her metni
+    # yalnızca bir kez vektöre çevirmek için sonucu önbellekte tutuyoruz.
+    # Vektörler birim uzunlukta olduğu için iç çarpım = kosinüs benzerliği.
+    return anlamsal_model().encode(
+        metni_parcala(metin),
+        normalize_embeddings=True
+    )
+
+
+def anlamsal_benzerlik(metin1, metin2):
+
+    if not metin1.split() or not metin2.split():
+
+        return 0.0
+
+    benzerlikler = (
+        metin_vektorleri(metin1)
+        @ metin_vektorleri(metin2).T
+    )
+
+    # Her parça için diğer metindeki en benzer parçayı buluyoruz ve iki
+    # yönün ortalamasını alıyoruz. Böylece sonuç simetrik olur ve kısmi
+    # kopyada yalnızca kopyalanan parçalar yüksek puan alır.
+    oran = (
+        benzerlikler.max(axis=1).mean()
+        + benzerlikler.max(axis=0).mean()
+    ) / 2
+
+    # Kosinüs teorik olarak negatif olabilir; sonucu %0-100 aralığında tutuyoruz.
+    return float(min(max(oran, 0.0), 1.0)) * 100
+
+
+# ==================================================
 # 4. ÇOKLU KARŞILAŞTIRMA
 # ==================================================
 
@@ -513,6 +595,10 @@ YONTEMLER = {
     ),
 
 }
+
+if ANLAMSAL_KULLANILABILIR:
+
+    YONTEMLER["Anlamsal (Çok Dilli Model)"] = anlamsal_benzerlik
 
 
 
